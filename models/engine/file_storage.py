@@ -1,60 +1,90 @@
 #!/usr/bin/python3
-""" Class FileStorage """
-from json import dump, load, dumps
-from os.path import exists
-from models import base_model, user, place, state, city, amenity, review
-
-BaseModel = base_model.BaseModel
-User = user.User
-Place = place.Place
-State = state.State
-City = city.City
-Amenity = amenity.Amenity
-Review = review.Review
-name_class = ["BaseModel", "City", "State",
-              "Place", "Amenity", "Review", "User"]
+"""Module defines `FileStorage` class."""
+import json
 
 
 class FileStorage:
-    """
-    """
+    """Serialize to a JSON file and deserialize JSON file to instances."""
+
     __file_path = "file.json"
     __objects = {}
 
     def all(self):
+        """Returns the dictionary `__objects`.
+
+        Args:
+            self (object): <class '__main__.FileStorage'> instance
+
+        Returns:
+            __objects
         """
-        """
-        return FileStorage.__objects
+        return self.__class__.__objects
 
     def new(self, obj):
-        """ sets  the obj with key in __objects
+        """Populates `__objects`.
+
+        __objects will be populated with a key of `<obj's class name>.id`
+        format and a value of that key will be obj itself.
+
+        Args:
+            self (object): <class '__main__.FileStorage'> instance
+            obj (obj): Instance of class `obj.__class__`.
+
+        Returns:
+            None
         """
-        class_name = obj.__class__.__name__
-        id = obj.id
-        clas_id = class_name + "." + id
-        FileStorage.__objects[clas_id] = obj
+        key = obj.__class__.__name__ + "." + obj.id
+        self.__objects[key] = obj
+        return None
 
     def save(self):
-        """ file storage
+        """Serialize `__objects` to `__file_path`.
+
+        Args:
+            self (object): <class '__main__.FileStorage'> instance
+
+        Returns:
+            None
         """
-        dict_to_json = {}
-        for key, value in FileStorage.__objects.items():
-            dict_to_json[key] = value.to_dict()
-        with open(FileStorage.__file_path, "w", encoding='utf-8') as fil:
-            dump(dict_to_json, fil)
+        serialize_me_dict = {}
+        for key in self.__objects.keys():
+            serialize_me_dict[key] = self.__objects[key].to_dict()
+        with open(self.__file_path, "w") as file:
+            json.dump(serialize_me_dict, file)
+        return None
 
     def reload(self):
-        """ if (__file_path) exists deserializes JSON file to __objects
-            elif , do nothing. If the file not exist,
+        """Deserialize from `__file_path` to `__objects`
+
+        Args:
+            self (object): <class '__main__.FileStorage'> instance
+
+        Returns:
+            None
         """
-        dic_obj = {}
-        FileStorage.__objects = {}
-        if (exists(FileStorage.__file_path)):
-            with open(FileStorage.__file_path, "r") as fil:
-                dic_obj = load(fil)
-                for key, value in dic_obj.items():
-                    class_nam = key.split(".")[0]
-                    if class_nam in name_class:
-                        FileStorage.__objects[key] = eval(class_nam)(**value)
-                    else:
-                        pass
+        from models.user import User
+        from models.city import City
+        from models.place import Place
+        from models.state import State
+        from models.review import Review
+        from models.amenity import Amenity
+        from models.base_model import BaseModel
+
+        classes_dict = {
+            "User": User,
+            "City": City,
+            "Place": Place,
+            "State": State,
+            "Review": Review,
+            "Amenity": Amenity,
+            "BaseModel": BaseModel,
+        }
+        from models.user import User
+        from models.base_model import BaseModel
+        try:
+            with open(self.__file_path, "r") as file:
+                deserialize_me = json.load(file)
+            for k, v in deserialize_me.items():
+                self.__objects[k] = classes_dict[v["__class__"]](**v)
+        except Exception:
+            pass
