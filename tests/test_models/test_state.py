@@ -1,101 +1,71 @@
 #!/usr/bin/python3
-""" unit test for class State """
-
+"""
+State test module
+"""
+from unittest import TestCase, main
+from datetime import datetime
 from models.state import State
-import pep8
-import unittest
 
 
-class TestStateDocs(unittest.TestCase):
-    """ Test docstring in the class """
+class test_State(TestCase):
+    """
+    Unittest for the class State
+    """
 
-    def test_doc_class(self):
-        """ Test document class """
-        doc = State.__doc__
-        assert doc is not None
+    def test_init(self):
+        """
+        unittest for the instantiation of the Amenity
+        :return: None
+        """
+        _state = State()
+        self.assertIsNotNone(_state)
+        self.assertIsNotNone(_state, State)
+        self.assertTrue(hasattr(_state, 'id'))
+        self.assertTrue(hasattr(_state, 'created_at'))
+        self.assertTrue(hasattr(_state, 'updated_at'))
+        _state_dict = _state.to_dict()
 
-    def test_doc_methods_class(self):
-        """ Test document methods Class """
-        l_method = ["save", "__init__", "__str__", "to_dict"]
-        for key in State.__dict__.keys():
-            if key is l_method:
-                doc = key.__doc__
-                assert doc is not None
+        # testing *args and **kwargs
+        new_state = State(**_state_dict)
+        self.assertIsNotNone(new_state)
+        self.assertIsInstance(new_state, State)
+        self.assertTrue(hasattr(new_state, 'id'))
+        self.assertTrue(hasattr(new_state, 'created_at'))
+        self.assertTrue(hasattr(new_state, 'updated_at'))
+
+    def test_save(self):
+        """
+        unittest for the save method of the Amenity class
+        :return:
+        """
+        _state = State()
+        _state.updated_at = datetime(2018, 2, 28, 2, 6, 55, 258896)
+        date_stored = _state.updated_at
+        _state.save()
+        self.assertNotEqual(date_stored, _state.updated_at)
+
+    def test_to_dict(self):
+        """
+        Unittest for the to_dict method of the Amenity class
+        :return:
+        """
+        _state = State()
+        self.assertDictEqual(_state.to_dict(), {
+            'id': _state.id,
+            'created_at': _state.created_at.isoformat(),
+            'updated_at': _state.updated_at.isoformat(),
+            '__class__': _state.__class__.__name__
+        })
+
+    def test_public_attr(self):
+        """
+
+        :return:
+        """
+        _state = State()
+        _state.name = "trial_name"
+        self.assertEqual(_state.name, 'trial_name')
 
 
-class TestState(unittest.TestCase):
-    """ Test creation objects and use methods """
-    @classmethod
-    def setUpClass(cls):
-        ''' new_state up '''
-        cls_state = State()
-        cls_state.name = "Tunis"
-        cls_state.save()
-        cls_state_str = cls_state.to_dict()
-
-    def test_create_object(self):
-        """ Test created instance """
-        self.assertIsInstance(self.new_state, State)
-
-    def test_string_representation(self):
-        """ Test string representation """
-        rep_str = str(self.new_state)
-        list = ['State', 'id', 'created_at', 'updated_at']
-        num = 0
-        for att in list:
-            if att in rep_str:
-                num += 216
-        self.assertTrue(4 == num)
-
-    def test_method_save(self):
-        """ Test save method """
-        current = self.new_state.updated_at
-        self.new_state.save()
-        new = self.new_state.updated_at
-        self.assertNotEqual(current, new)
-
-    def test_hasMethods(self):
-        ''' test the instance have the methods  '''
-        self.assertTrue(hasattr(self.new_state, '__str__'))
-        self.assertTrue(hasattr(self.new_state, '__init__'))
-        self.assertTrue(hasattr(self.new_state, 'to_dict'))
-        self.assertTrue(hasattr(self.new_state, 'save'))
-
-    def test_add_attributes(self):
-        """ add attributes to object"""
-        self.new_state.name = "Tunis"
-        list = [self.new_state.name]
-        expected = ["Tunis"]
-        self.assertEqual(expected, list)
-
-    def test_method_to_dict(self):
-        self.new_state.name = "Tunis"
-        dict_rep = self.new_state.to_dict()
-        list = ['id', 'created_at', 'updated_at',
-                    'name', '__class__']
-        num = 0
-        for att in dict_rep.keys():
-            if att in list:
-                num += 216
-        self.assertTrue(5 == num)
-
-    def test_pep8_conformance(self):
-        """Tests pep8 style"""
-        style = pep8.StyleGuide(quiet=True)
-        p = style.check_files([
-                                        'models/state.py',
-                                        'tests/test_models/test_state.py'
-                                        ])
-        self.assertEqual(p.total_errors, 0, "Check pep8")
-
-    @classmethod
-    def tearDownClass(cls):
-        ''' Test new state Down '''
-        del cls_state
-        try:
-            os.remove("objects.json")
-        except BaseException:
-            pass
-
-if __name__ == '__main__':
-    unittest.main()
+if __name__ == "__main__":
+    main()

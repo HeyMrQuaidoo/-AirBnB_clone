@@ -1,90 +1,54 @@
 #!/usr/bin/python3
-"""Module defines `FileStorage` class."""
-import json
+"""
+FileStorage module
+"""
+from json import dump, load
+from os import path
+from models.base_model import BaseModel
+from models.user import User
+from models.city import City
+from models.place import Place
+from models.amenity import Amenity
+from models.review import Review
+from models.state import State
 
 
 class FileStorage:
-    """Serialize to a JSON file and deserialize JSON file to instances."""
-
+    """
+    the storage class to store an instance of any model
+    """
     __file_path = "file.json"
     __objects = {}
 
-    def all(self):
-        """Returns the dictionary `__objects`.
-
-        Args:
-            self (object): <class '__main__.FileStorage'> instance
-
-        Returns:
-            __objects
+    def all(self) -> dict:
         """
-        return self.__class__.__objects
+        Return all the objects saved in the file
+        :return: dict
+        """
+        return self.__objects
 
     def new(self, obj):
-        """Populates `__objects`.
-
-        __objects will be populated with a key of `<obj's class name>.id`
-        format and a value of that key will be obj itself.
-
-        Args:
-            self (object): <class '__main__.FileStorage'> instance
-            obj (obj): Instance of class `obj.__class__`.
-
-        Returns:
-            None
         """
-        key = obj.__class__.__name__ + "." + obj.id
-        self.__objects[key] = obj
-        return None
+        Add new objects to the self dictionary
+        """
+        self.__objects[obj.__class__.__name__ + '.' + str(obj.id)] = obj
 
     def save(self):
-        """Serialize `__objects` to `__file_path`.
-
-        Args:
-            self (object): <class '__main__.FileStorage'> instance
-
-        Returns:
-            None
         """
-        serialize_me_dict = {}
-        for key in self.__objects.keys():
-            serialize_me_dict[key] = self.__objects[key].to_dict()
-        with open(self.__file_path, "w") as file:
-            json.dump(serialize_me_dict, file)
-        return None
+        saves new files to self.__file_path
+        :return:
+        """
+        with open(self.__file_path, mode='w', encoding='utf-8') as f_write:
+            dump({key: value.to_dict()
+                  for key, value in self.__objects.items()}, f_write)
 
     def reload(self):
-        """Deserialize from `__file_path` to `__objects`
-
-        Args:
-            self (object): <class '__main__.FileStorage'> instance
-
-        Returns:
-            None
         """
-        from models.user import User
-        from models.city import City
-        from models.place import Place
-        from models.state import State
-        from models.review import Review
-        from models.amenity import Amenity
-        from models.base_model import BaseModel
-
-        classes_dict = {
-            "User": User,
-            "City": City,
-            "Place": Place,
-            "State": State,
-            "Review": Review,
-            "Amenity": Amenity,
-            "BaseModel": BaseModel,
-        }
-        from models.user import User
-        from models.base_model import BaseModel
-        try:
-            with open(self.__file_path, "r") as file:
-                deserialize_me = json.load(file)
-            for k, v in deserialize_me.items():
-                self.__objects[k] = classes_dict[v["__class__"]](**v)
-        except Exception:
-            pass
+        retrieves data from a file self.__file_path
+        :return:
+        """
+        if path.exists(self.__file_path):
+            with open(self.__file_path, mode='r', encoding='utf-8') as f_read:
+                data_read = load(f_read)
+                for _, value in data_read.items():
+                    self.new(eval(value.pop('__class__'))(**value))
